@@ -1,0 +1,29 @@
+{
+  "name": "Filibuster",
+  "version": "0.0.0",
+  "description": "Allow host to enter into the namespaces of running containers",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Runnable/Filibuster.git"
+  },
+  "keywords": [
+    "namespaces",
+    "containers",
+    "docker"
+  ],
+  "author": "Anandkumar Patel",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Runnable/Filibuster/issues"
+  },
+  "homepage": "https://github.com/Runnable/Filibuster",
+  "dependencies": {
+    "pty.js": "^0.2.4",
+    "which": "^1.0.5",
+    "express": "^4.2.0"
+  }
+}
