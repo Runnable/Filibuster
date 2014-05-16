@@ -24,6 +24,7 @@ var connect = function(pid, nsArgs, streamOpts) {
   var args = nsArgs || "--mount --uts --ipc --net --pid";
   var cmd = "sudo " + nsenterPath + " --target " + pid + " " + args;
   var term = pty.spawn('bash', ["-c", cmd], streamOpts);
+
   return term;
 };
 
