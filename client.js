@@ -1,3 +1,4 @@
+var program = require('commander');
 var Primus = require('primus');
 var Socket = Primus.createSocket({ 
   transformer: 'websockets',
@@ -6,7 +7,29 @@ var Socket = Primus.createSocket({
   }, 
   parser: 'JSON'
 });
-var primus = new Socket('http://localhost:3111?pid=123&d={you:1}');
+
+program
+  .version('0.0.1')
+  .usage('[options] target')
+  .option('-h, --host <name>', 'hostname')
+  .option('-p, --port <port>', 'port number', parseInt)
+  .option('-n, --name [shell]', 'type of shell, defauly xterm-color')
+  .option('-c, --cols [number]', 'number of column for shell', parseInt)
+  .option('-r, --rows [number]', 'number of rows for shell', parseInt)
+  .option('-d, --cwd [path]', 'cwd path')
+  .option('-e, --env [number]', 'set envs one per option', [])
+  .parse(process.argv);
+
+if(!program.args[0] || !program.port || !program.host) {
+  program.help();
+  process.exit(0);
+}
+
+var addr = 'http://'+program.host+":"+program.port;
+addr += "?pid="+program.args[0];
+// TODO add test of args
+console.log("connecting to ", addr);
+var primus = new Socket(addr);
 
 primus.on('error', function (err) {
   console.log('Filibuster: error occured', err);
@@ -26,14 +49,19 @@ var onConnect = function() {
   var clientEvents = primus.substream('clientEvents');
 
   // without this, we would only get streams once enter is pressed
-  process.stdin.setRawMode(true);
+  // process.stdin.setRawMode(true);
   // if not set binary string get sent which would require decoding into pty
   process.stdin.setEncoding('utf8');
   // pipe terminal to primus substream
   process.stdin.pipe(terminal).pipe(process.stdout);
 
+  var start = new Date();
+  clientEvents.write({event: "ping", data: start});
+
   clientEvents.on('data', function(data) {
-    console.log("clientEvents: ", data);
+    console.log("clientEvents: ping-pong took: ",new Date()-start);
+    start = new Date();
+    clientEvents.write({event: "ping", data: start});
   });
 };
 primus.on('open', onConnect);
