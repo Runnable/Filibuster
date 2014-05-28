@@ -1,14 +1,48 @@
+// var pty = require('pty.js');
+
+// console.log("bash init");
+
+// var connect = function(pid, nsArgs, streamOpts, cb) {
+//   var term = pty.spawn('bash', [], streamOpts);
+//   cb(null, term);
+// };
+
+// module.exports.connect = connect;
+
+var nsenterPath;
 var pty = require('pty.js');
+var which = require('which');
+var events = require('events');
+var eventEmitter = new events.EventEmitter();
+var found = false;
 
-var init = function(cb) {
-  console.log("bash init");
-  cb(null, "bash");
-};
+which('bash', function(err, cmdpath) {
+  if (err) {
+    console.log('err with bash: '+err);
+    process.exit(1);
+  }
+  nsenterPath = cmdpath;
+  found = true;
+  eventEmitter.emit('found');
+});
 
-var connect = function(pid, nsArgs, streamOpts) {
-  var term = pty.spawn('bash', [], streamOpts);
-  return term;
+var connect = function(pid, nsArgs, streamOpts, cb) {
+  if(!pid) {
+    return null;
+  }
+  if (!found) {
+    return eventEmitter.on('found', function() {
+      spawnTerm();
+    });
+  }
+
+  spawnTerm();
+
+  function spawnTerm() {
+    var term = pty.spawn('bash', [], streamOpts);
+    cb(null, term);
+  }
 };
 
 module.exports.connect = connect;
-module.exports.init = init;
+

@@ -10,22 +10,15 @@ if (config.nsType === "nsenter") {
   nsenter = require('./nsenterDriver.js');
 } else if (config.nsType === 'test') {
   nsenter = require('./testDriver.js');
+  // comment out for debuging
+  console.log = function(){return;};
 }
-
-nsenter.init(function(err,cmdpath) {
-  if (err) {
-    console.log('err with nsenter: '+err);
-    process.exit(1);
-  }
-  console.log("nsenter found and ready: "+cmdpath);
-});
 
 // add multiplex to Primus
 primus.use('substream', require('substream'));
 
 // handle connection
 primus.on('connection', function (socket) {
-  console.log(typeof socket.query);
   if (typeof socket.query.pid !== 'string'||
     !parseInt(socket.query.pid)) {
     socket.write("error: invalid args");
@@ -33,33 +26,63 @@ primus.on('connection', function (socket) {
   }
   console.log("attaching too: "+socket.query.pid);
 
+  var terminal = nsenter.connect(socket.query.pid,
+    "--mount --uts --ipc --net --pid",
+    getPtyOptions(socket.query),
+    function(err, terminal) {
+      if(err) {
+        console.error("nsenter returned err:", err);
+        return socket.end();
+      }
+      // used for resize and ping events
+      setupClientStream(socket.substream('clientEvents'), terminal);
+
+      // used for terminal
+      setupTerminalStream(socket.substream('terminal'), terminal);
+
+      // cleanup terminal
+      socket.on('end', function(data) {
+        terminal.destroy();
+      });
+
+      // terminal closed, end connection
+      terminal.on('end', function(data) {
+        terminal.destroy();
+        socket.end();
+      });
+    });
+});
+
+function getPtyOptions(opts) {
   var ptyOptions = {
-    name: socket.query.name || 'xterm-color',
-    cols: parseInt(socket.query.cols) || 80,
-    rows: parseInt(socket.query.rows) || 30,
+    name: opts.name || 'xterm-color',
+    cols: parseInt(opts.cols) || 80,
+    rows: parseInt(opts.rows) || 30,
   };
 
-  if(socket.query.cwd) {
-    ptyOptions.cwd = socket.query.cwd;
+  if(opts.cwd) {
+    ptyOptions.cwd = opts.cwd;
   }
 
-  if(socket.query.env) {
-    ptyOptions.env = JSON.parse(socket.query.env);
+  if(opts.env) {
+    ptyOptions.env = JSON.parse(opts.env);
   }
+  return ptyOptions;
+}
 
-  var terminal = nsenter.connect(socket.query.pid, "--mount --uts --ipc --net --pid", ptyOptions);
-  // used for resize and ping events
-  var clientEventsStream = socket.substream('clientEvents');
-  // used for terminal
-  var terminalStream = socket.substream('terminal');
-
+function setupTerminalStream(terminalStream, terminal) {
   // pipe stream to terminal, and terminal out to stream
-  terminalStream.pipe(terminal);
+  terminalStream.on('data', function(data) {
+    terminal.write(data);
+  });
 
   terminal.on('data', function(data) {
     terminalStream.write(data);
   });
+  return terminalStream;
+}
 
+function setupClientStream(clientEventsStream, terminal)  {
   /*
     This stream only accepts objects formated like so:
     {
@@ -69,14 +92,20 @@ primus.on('connection', function (socket) {
   */
   clientEventsStream.on('data', function(message) {
     if(typeof message !== 'object' || typeof message.event !== 'string') {
-      clientEventsStream.write("error: invalid input");
+      clientEventsStream.write({
+        event: "error",
+        data: "invalid input"
+      });
       return console.log('invalid input:', message);
     }
     if(message.event === 'resize') {
       if(typeof message.data !== 'object' ||
         typeof message.data.x !== 'number' ||
         typeof message.data.y !== 'number') {
-        clientEventsStream.write("error: invalid x and y data");
+        clientEventsStream.write({
+          event: "error",
+          data: "invalid x and y data"
+        });
         return console.log("invalid x and y data", message);
       }
       return terminal.resize(message.data.x, message.data.y);
@@ -85,22 +114,16 @@ primus.on('connection', function (socket) {
         event: "pong"
       });
     }
-    clientEventsStream.write("error: event not supported");
+    clientEventsStream.write({
+      event: "error",
+      data: "event not supported"
+    });
     return console.log("event not supported: ", message.event);
   });
-
-  socket.on('end', function(data) {
-    console.log("main end: ", data);
+  clientEventsStream.write({
+    event: "connected"
   });
-  clientEventsStream.on('end', function(data) {
-    console.log("clientEventsStream end: ", data);
-  });
-  // terminal closed, end connection
-  terminal.on('end', function(data) {
-    terminal.destroy();
-    socket.end();
-    console.log("terminal end: ", data);
-  });
-});
+  return clientEventsStream;
+}
 
 module.exports = server;
