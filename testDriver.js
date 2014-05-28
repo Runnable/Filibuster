@@ -1,15 +1,3 @@
-// var pty = require('pty.js');
-
-// console.log("bash init");
-
-// var connect = function(pid, nsArgs, streamOpts, cb) {
-//   var term = pty.spawn('bash', [], streamOpts);
-//   cb(null, term);
-// };
-
-// module.exports.connect = connect;
-
-var nsenterPath;
 var pty = require('pty.js');
 var which = require('which');
 var events = require('events');
@@ -21,7 +9,6 @@ which('bash', function(err, cmdpath) {
     console.log('err with bash: '+err);
     process.exit(1);
   }
-  nsenterPath = cmdpath;
   found = true;
   eventEmitter.emit('found');
 });
@@ -45,4 +32,3 @@ var connect = function(pid, nsArgs, streamOpts, cb) {
 };
 
 module.exports.connect = connect;
-
