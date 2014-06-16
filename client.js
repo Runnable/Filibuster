@@ -1,10 +1,10 @@
 var program = require('commander');
 var Primus = require('primus');
-var Socket = Primus.createSocket({ 
+var Socket = Primus.createSocket({
   transformer: 'websockets',
   plugin: {
     'substream': require('substream')
-  }, 
+  },
   parser: 'JSON'
 });
 
@@ -25,8 +25,13 @@ if(!program.args[0] || !program.port || !program.host) {
   process.exit(0);
 }
 
+var cmd = JSON.stringify({
+      username: "ubuntu",
+      host: "runnable2.net",
+      port: "49154"
+    });
 var addr = 'http://'+program.host+":"+program.port;
-addr += "?pid="+program.args[0];
+addr += "?args="+cmd;
 // TODO add test of args
 console.log("connecting to ", addr);
 var primus = new Socket(addr);
@@ -55,13 +60,13 @@ var onConnect = function() {
   // pipe terminal to primus substream
   process.stdin.pipe(terminal).pipe(process.stdout);
 
-  var start = new Date();
-  clientEvents.write({event: "ping", data: start});
+  // var start = new Date();
+  // clientEvents.write({event: "ping", data: start});
 
-  clientEvents.on('data', function(data) {
-    console.log("clientEvents: ping-pong took: ",new Date()-start);
-    start = new Date();
-    clientEvents.write({event: "ping", data: start});
-  });
+  // clientEvents.on('data', function(data) {
+  //   console.log("clientEvents: ping-pong took: ",new Date()-start);
+  //   start = new Date();
+  //   clientEvents.write({event: "ping", data: start});
+  // });
 };
 primus.on('open', onConnect);
