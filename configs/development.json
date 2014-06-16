@@ -1,5 +1,5 @@
 {
-  "nsType": "test",
+  "nsType": "sshDriver",
   "socketType": "websockets",
   "port": 3111
 }

@@ -1,59 +1,80 @@
-//'use strict';
+'use strict';
 var config = require("./configs.js");
 var Primus = require('primus');
-var http = require('http');
-var server = http.createServer();
-var primus = new Primus(server, { transformer: config.socketType, parser: 'JSON' });
+var term = require('./'+config.nsType+'.js');
 
-var nsenter;
-if (config.nsType === "nsenter") {
-  nsenter = require('./nsenterDriver.js');
-} else if (config.nsType === 'test') {
-  nsenter = require('./testDriver.js');
-  // comment out for debuging
-  console.log = function(){return;};
+function Filibuster (app, middlewares) {
+  var server = require('http').createServer(app);
+  var primus = new Primus(server, { transformer: config.socketType, parser: 'JSON' });
+  if (typeof middlewares === 'object') {
+    for (var middleware in middlewares) {
+      if (typeof middlewares[middleware] !== 'function') {
+        throw new Error("invalid middleware");
+      }
+      primus.before(middleware, middlewares[middleware]);
+    }
+  }
+
+  // add multiplex to Primus
+  primus.use('substream', require('substream'));
+
+  // handle connection
+  primus.on('connection', function (socket) {
+    term.connect(
+      getArgs(socket.query),
+      getPtyOptions(socket.query),
+      function(err, terminal) {
+        if(err) {
+          console.error("term returned err:", err);
+          return socket.end();
+        }
+        connectStreams(socket, terminal);
+      });
+  });
+
+  return server;
 }
 
-// add multiplex to Primus
-primus.use('substream', require('substream'));
+function connectStreams (socket, terminal) {
+  // used for resize and ping events
+  setupClientStream(socket.substream('clientEvents'), terminal);
 
-// handle connection
-primus.on('connection', function (socket) {
-  if (typeof socket.query.pid !== 'string'||
-    !parseInt(socket.query.pid)) {
-    socket.write("error: invalid args");
-    return socket.end();
+  // used for terminal
+  setupTerminalStream(socket.substream('terminal'), terminal);
+
+  // cleanup terminal
+  socket.on('end', function() {
+    terminal.destroy();
+  });
+
+  // terminal closed, end connection
+  terminal.on('end', function() {
+    terminal.destroy();
+    socket.end();
+  });
+}
+
+function getArgs(query) {
+  var args = {};
+
+  if (typeof query.args === 'object') {
+    args = query.args;
+  } else if (typeof query.args === 'string') {
+    args = JSON.parse(query.args);
   }
-  console.log("attaching too: "+socket.query.pid);
 
-  var terminal = nsenter.connect(socket.query.pid,
-    "--mount --uts --ipc --net --pid",
-    getPtyOptions(socket.query),
-    function(err, terminal) {
-      if(err) {
-        console.error("nsenter returned err:", err);
-        return socket.end();
-      }
-      // used for resize and ping events
-      setupClientStream(socket.substream('clientEvents'), terminal);
+  return args;
+}
 
-      // used for terminal
-      setupTerminalStream(socket.substream('terminal'), terminal);
+function getPtyOptions(query) {
+  var opts = {};
 
-      // cleanup terminal
-      socket.on('end', function(data) {
-        terminal.destroy();
-      });
+  if (typeof query.opts === 'object') {
+    opts = query.opts;
+  } else if (typeof query.opts === 'string') {
+    opts = JSON.parse(query.opts);
+  }
 
-      // terminal closed, end connection
-      terminal.on('end', function(data) {
-        terminal.destroy();
-        socket.end();
-      });
-    });
-});
-
-function getPtyOptions(opts) {
   var ptyOptions = {
     name: opts.name || 'xterm-color',
     cols: parseInt(opts.cols) || 80,
@@ -64,9 +85,10 @@ function getPtyOptions(opts) {
     ptyOptions.cwd = opts.cwd;
   }
 
-  if(opts.env) {
-    ptyOptions.env = JSON.parse(opts.env);
+  if(typeof opts.env === 'object') {
+    ptyOptions.env = opts.env;
   }
+
   return ptyOptions;
 }
 
@@ -125,5 +147,4 @@ function setupClientStream(clientEventsStream, terminal)  {
   });
   return clientEventsStream;
 }
-
-module.exports = server;
+module.exports = Filibuster;

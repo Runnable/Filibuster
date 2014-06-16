@@ -19,8 +19,8 @@ which('nsenter', function(err, cmdpath) {
 // Opts are option for pty default empty
 // returns stream to STDIN of container
 // return null if invalid argument
-var connect = function(pid, nsArgs, streamOpts, cb) {
-  if(!pid) {
+var connect = function(nsArgs, streamOpts, cb) {
+  if(!nsArgs.pid) {
     return null;
   }
   if (!found) {
@@ -32,8 +32,8 @@ var connect = function(pid, nsArgs, streamOpts, cb) {
   spawnTerm();
 
   function spawnTerm() {
-    var args = nsArgs || "--mount --uts --ipc --net --pid";
-    var cmd = "sudo " + nsenterPath + " --target " + pid + " " + args;
+    var args = nsArgs.cmd || "--mount --uts --ipc --net --pid";
+    var cmd = "sudo " + nsenterPath + " --target " + nsArgs.pid + " " + args;
     var term = pty.spawn('bash', ["-c", cmd], streamOpts);
     cb(null, term);
   }

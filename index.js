@@ -1,3 +1,7 @@
 var config = require("./configs.js");
-var server = require("./filibuster.js");
+var filibuster = require("./filibuster.js");
+var express = require('express');
+var app = express();
+var server = module.exports = filibuster(app);
+
 server.listen(config.port);

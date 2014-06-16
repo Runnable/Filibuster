@@ -2,9 +2,10 @@
   "name": "Filibuster",
   "version": "0.0.0",
   "description": "Allow host to enter into the namespaces of running containers",
-  "main": "index.js",
+  "main": "filibuster.js",
   "scripts": {
-    "test": "lab -v -c"
+    "test": "lab -v -c",
+    "start": "node index.js"
   },
   "repository": {
     "type": "git",
