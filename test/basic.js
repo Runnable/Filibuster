@@ -249,7 +249,7 @@ Lab.experiment('test connectivity', function () {
           }
         });
         term.write('tput cols\n');
-        term.on('data', function function_name (data) {
+        term.on('data', function (data) {
           if(~data.indexOf('222')){
             pass = true;
             term.write('tput lines\n');
@@ -284,11 +284,25 @@ Lab.experiment('test connectivity', function () {
   });
 
   Lab.experiment('session with opts', function () {
+    Lab.test('terminal start error', function (done) {
+      var pass = true;
+      var primus = new Socket('http://localhost:3111?&args={"error":"222"}');
+      var term = primus.substream('terminal');
+      term.on('data', function (data) {
+        pass = false;
+      });
+      primus.on('end', function () {
+        if (pass) {
+          return done();
+        }
+        return done(new Error("failed close on terminal error"));
+      });
+    });
     Lab.test('cols and row', function (done) {
       var pass = false;
-      var primus = new Socket('http://localhost:3111?pid=1234&opts={"cols":"222","rows":"123"}');
+      var primus = new Socket('http://localhost:3111?&opts={"cols":"222","rows":"123"}');
       var term = primus.substream('terminal');
-      term.on('data', function function_name (data) {
+      term.on('data', function (data) {
         if(~data.indexOf('123')){
           pass = true;
           term.write('tput cols\n');
@@ -307,9 +321,9 @@ Lab.experiment('test connectivity', function () {
     });
     Lab.test('set cwd to /', function (done) {
       var pass = false;
-      var primus = new Socket('http://localhost:3111?pid=1234&opts={"cwd":"/"}');
+      var primus = new Socket('http://localhost:3111?&opts={"cwd":"/"}');
       var term = primus.substream('terminal');
-      term.on('data', function function_name (data) {
+      term.on('data', function (data) {
         if(~data.indexOf('/')) {
           pass = true;
           return primus.end();
@@ -325,9 +339,9 @@ Lab.experiment('test connectivity', function () {
     });
     Lab.test('term', function (done) {
       var pass = false;
-      var primus = new Socket('http://localhost:3111?pid=1234&opts={"name":"vt100"}');
+      var primus = new Socket('http://localhost:3111?&opts={"name":"vt100"}');
       var term = primus.substream('terminal');
-      term.on('data', function function_name (data) {
+      term.on('data', function (data) {
         if(~data.indexOf('vt100')) {
           pass = true;
           return primus.end();
@@ -343,9 +357,9 @@ Lab.experiment('test connectivity', function () {
     });
     Lab.test('env', function (done) {
       var pass = false;
-      var primus = new Socket('http://localhost:3111?pid=1234&opts={"env":{"TEST":"thisIsEnv"}}');
+      var primus = new Socket('http://localhost:3111?&opts={"env":{"TEST":"thisIsEnv"}}');
       var term = primus.substream('terminal');
-      term.on('data', function function_name (data) {
+      term.on('data', function (data) {
         if(~data.indexOf('thisIsEnv')) {
           pass = true;
           return primus.end();
