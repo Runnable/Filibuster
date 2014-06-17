@@ -1,3 +1,4 @@
+'use strict';
 var config = require("../configs.js");
 var Lab = require('lab');
 var Primus = require('primus');
@@ -21,14 +22,74 @@ Lab.experiment('init', function () {
   });
 });
 
+Lab.experiment('test app inputs', function () {
+  var server = {};
+  Lab.test('no inputs', function (done) {
+    try {
+      server = require('../filibuster.js');
+      server = server();
+    } catch (err) {
+      return new Error("failed to catch invalid middleware");
+    }
+    return done();
+  });
+  Lab.test('only express', function (done) {
+    var express = require('express');
+    var app = express();
+    try {
+      server = require('../filibuster.js');
+      server = server({
+        express: app
+      });
+    } catch (err) {
+      return new Error("failed to catch invalid middleware");
+    }
+    return done();
+  });
+  Lab.test('only http', function (done) {
+    var express = require('express');
+    var app = express();
+    var http = require('http');
+    var httpServer = http.createServer(app);
+    try {
+      server = require('../filibuster.js');
+      server = server({
+        httpServer: httpServer
+      });
+    } catch (err) {
+      return new Error("failed to catch invalid middleware");
+    }
+    return done();
+  });
+  Lab.test('only primus', function (done) {
+    var express = require('express');
+    var app = express();
+    var http = require('http');
+    var httpServer = http.createServer(app);
+    var primus = new Primus(httpServer,{transformer: config.socketType,parser: 'JSON'});
+    try {
+      server = require('../filibuster.js');
+      server = server({
+        primus: primus
+      });
+    } catch (err) {
+      return new Error("failed to catch invalid middleware");
+    }
+    return done();
+  });
+});
+
 Lab.experiment('test middleware', function () {
-  var server;
-  var express = require('express');
-  var app = express();
+  var server = {};
   Lab.test('invalid middleware', function (done) {
     try {
       server = require('../filibuster.js');
-      server = server(app, {fake: "fake"});
+      var args = {
+        middlewares: {
+          fake: "fake"
+        }
+      };
+      server = server(args);
     } catch (err) {
       return done();
     }
@@ -37,33 +98,31 @@ Lab.experiment('test middleware', function () {
   Lab.test('valid middleware', function (done) {
     try {
       server = require('../filibuster.js');
-      server = server(app, {
-        test: function(req,res, next) {
-          next("test");
+      var args = {
+        middlewares: {
+          test: function(req,res, next) {
+            next("test");
+          }
         }
-      });
-    server.listen(config.port);
-
+      };
+      server = server(args);
+      server.listen(config.port);
     } catch (err) {
-     return new Error("failed to catch invalid middleware");
+      return new Error("failed to catch invalid middleware");
     }
     var primus = new Socket('http://localhost:3111');
-    primus.on('error', function (err) {
+    primus.on('error', function () {
       server.close(done);
     });
   });
 });
 
-
 Lab.experiment('test connectivity', function () {
-  var server;
-  var express = require('express');
-  var app = express();
-
+  var server = {};
   Lab.beforeEach(function(done){
     try {
       server = require('../filibuster.js');
-      server = server(app);
+      server = server();
       server.listen(config.port, done);
     } catch (err) {
       return done(err);
