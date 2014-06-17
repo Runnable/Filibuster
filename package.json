@@ -4,7 +4,7 @@
   "description": "Allow host to enter into the namespaces of running containers",
   "main": "filibuster.js",
   "scripts": {
-    "test": "lab -v -c",
+    "test": "NODE_ENV=test lab -v -c",
     "start": "node index.js"
   },
   "repository": {

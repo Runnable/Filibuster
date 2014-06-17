@@ -1,6 +1,6 @@
 machine:
   environment:
-    NODE_ENV: testing
+    NODE_ENV: test
 dependencies:
   override:
     - nvm install 0.10.26
