@@ -1,25 +1,45 @@
 'use strict';
 var config = require("./configs.js");
-var Primus = require('primus');
 var term = require('./'+config.nsType+'.js');
+var Primus = require('primus');
+var express = require('express');
+var http = require('http');
 
-function Filibuster (app, middlewares) {
-  var server = require('http').createServer(app);
-  var primus = new Primus(server, { transformer: config.socketType, parser: 'JSON' });
-  if (typeof middlewares === 'object') {
-    for (var middleware in middlewares) {
-      if (typeof middlewares[middleware] !== 'function') {
+function Filibuster (services) {
+  // normilize inputs
+  if (!services) {
+    services = {};
+  }
+  // select what to return=
+  if (typeof services.express !== 'object') {
+    services.express = express();
+  }
+  if (typeof services.httpServer !== 'object') {
+    services.httpServer = http.createServer(services.express);
+  }
+  if (typeof services.primus !== 'object') {
+    services.primus = new Primus(
+      services.httpServer,
+      {
+        transformer: config.socketType,
+        parser: 'JSON'
+      });
+  }
+
+  if (typeof services.middlewares === 'object') {
+    for (var middleware in services.middlewares) {
+      if (typeof services.middlewares[middleware] !== 'function') {
         throw new Error("invalid middleware");
       }
-      primus.before(middleware, middlewares[middleware]);
+      services.primus.before(middleware, services.middlewares[middleware]);
     }
   }
 
   // add multiplex to Primus
-  primus.use('substream', require('substream'));
+  services.primus.use('substream', require('substream'));
 
   // handle connection
-  primus.on('connection', function (socket) {
+  services.primus.on('connection', function (socket) {
     term.connect(
       getArgs(socket.query),
       getPtyOptions(socket.query),
@@ -32,7 +52,7 @@ function Filibuster (app, middlewares) {
       });
   });
 
-  return server;
+  return services.httpServer;
 }
 
 function connectStreams (socket, terminal) {
