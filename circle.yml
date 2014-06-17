@@ -1,0 +1,11 @@
+machine:
+  environment:
+    NODE_ENV: testing
+dependencies:
+  override:
+    - nvm install 0.10.26
+    - nvm alias default 0.10.26
+    - npm install
+test:
+  override:
+    - npm test
