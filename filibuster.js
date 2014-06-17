@@ -10,8 +10,8 @@ function Filibuster (services) {
   if (!services) {
     services = {};
   }
-  // select what to return=
-  if (typeof services.express !== 'object') {
+  // select what to return
+  if (typeof services.express !== 'function') {
     services.express = express();
   }
   if (typeof services.httpServer !== 'object') {
@@ -77,9 +77,7 @@ function connectStreams (socket, terminal) {
 function getArgs(query) {
   var args = {};
 
-  if (typeof query.args === 'object') {
-    args = query.args;
-  } else if (typeof query.args === 'string') {
+  if (typeof query.args === 'string') {
     args = JSON.parse(query.args);
   }
 
@@ -89,9 +87,7 @@ function getArgs(query) {
 function getPtyOptions(query) {
   var opts = {};
 
-  if (typeof query.opts === 'object') {
-    opts = query.opts;
-  } else if (typeof query.opts === 'string') {
+  if (typeof query.opts === 'string') {
     opts = JSON.parse(query.opts);
   }
 
