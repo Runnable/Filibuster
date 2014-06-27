@@ -40,6 +40,9 @@ function Filibuster (services) {
 
   // handle connection
   services.primus.on('connection', function (socket) {
+    if (socket.query.type !== 'filibuster') {
+      return;
+    }
     term.connect(
       getArgs(socket.query),
       getPtyOptions(socket.query),
