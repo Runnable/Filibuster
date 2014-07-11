@@ -1,7 +1,9 @@
+'use strict';
 var nsenterPath;
 var pty = require('pty.js');
 var which = require('which');
-var event = require('events').EventEmitter;
+var events = require('events');
+var eventEmitter = new events.EventEmitter();
 var found = false;
 
 which('nsenter', function(err, cmdpath) {
@@ -11,7 +13,7 @@ which('nsenter', function(err, cmdpath) {
   }
   nsenterPath = cmdpath;
   found = true;
-  event.emit('connected');
+  eventEmitter.emit('connected');
 });
 
 // pid of container to connect to *REQUIRED
@@ -24,7 +26,7 @@ var connect = function(nsArgs, streamOpts, cb) {
     return null;
   }
   if (!found) {
-    return event.on('found', function() {
+    return eventEmitter.on('found', function() {
       spawnTerm();
     });
   }
