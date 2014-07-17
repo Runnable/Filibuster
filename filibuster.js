@@ -1,39 +1,12 @@
 'use strict';
-var config = require("./configs.js");
-var term = require('./'+config.nsType+'.js');
+var configs = require("./configs.js");
+var term = require('./'+configs.nsType+'.js');
 var Primus = require('primus');
 var express = require('express');
 var http = require('http');
 
 function Filibuster (services) {
-  // normilize inputs
-  if (!services) {
-    services = {};
-  }
-  // select what to return
-  if (typeof services.express !== 'function') {
-    services.express = express();
-  }
-  if (typeof services.httpServer !== 'object') {
-    services.httpServer = http.createServer(services.express);
-  }
-  if (typeof services.primus !== 'object') {
-    services.primus = new Primus(
-      services.httpServer,
-      {
-        transformer: config.socketType,
-        parser: 'JSON'
-      });
-  }
-
-  if (typeof services.middlewares === 'object') {
-    for (var middleware in services.middlewares) {
-      if (typeof services.middlewares[middleware] !== 'function') {
-        throw new Error("invalid middleware");
-      }
-      services.primus.before(middleware, services.middlewares[middleware]);
-    }
-  }
+  services = sanitizeInput(services);
 
   // add multiplex to Primus
   services.primus.use('substream', require('substream'));
@@ -41,7 +14,7 @@ function Filibuster (services) {
   // handle connection
   services.primus.on('connection', function (socket) {
     if (socket.query.type !== 'filibuster') {
-      return;
+      return socket.end();
     }
     term.connect(
       getArgs(socket.query),
@@ -58,6 +31,36 @@ function Filibuster (services) {
   return services.httpServer;
 }
 
+function sanitizeInput (services) {
+  // normilize inputs
+  if (!services) {
+    services = {};
+  }
+  // select what to add
+  if (typeof services.express !== 'function') {
+    services.express = express();
+  }
+  if (typeof services.httpServer !== 'object') {
+    services.httpServer = http.createServer(services.express);
+  }
+  if (typeof services.primus !== 'object') {
+    services.primus = new Primus(
+      services.httpServer,
+      {
+        transformer: configs.socketType,
+        parser: 'JSON'
+      });
+  }
+  if (typeof services.middlewares === 'object') {
+    for (var middleware in services.middlewares) {
+      if (typeof services.middlewares[middleware] !== 'function') {
+        throw new Error("invalid middleware");
+      }
+      services.primus.before(middleware, services.middlewares[middleware]);
+    }
+  }
+  return services;
+}
 function connectStreams (socket, terminal) {
   // used for resize and ping events
   setupClientStream(socket.substream('clientEvents'), terminal);
