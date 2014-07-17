@@ -1,6 +1,6 @@
 {
   "name": "Filibuster",
-  "version": "0.0.4",
+  "version": "0.1.0",
   "description": "Allow host to enter into the namespaces of running containers",
   "main": "filibuster.js",
   "scripts": {
