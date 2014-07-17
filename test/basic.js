@@ -170,8 +170,10 @@ Lab.experiment('test connectivity', function () {
     });
     Lab.test('send term command', function (done) {
       var term = primus.substream('terminal');
+      var buffer = '';
       term.on('data', function (data) {
-        if(~data.indexOf('TEST')) {
+        buffer += data;
+        if(~buffer.indexOf('TEST')) {
           pass = true;
           return primus.end();
         }
@@ -337,13 +339,15 @@ Lab.experiment('test connectivity', function () {
       var primus = new Socket('http://localhost:3111?type=filibuster&opts={"cwd":"/"}' +
         '&args={"containerId": "b9fd4051eb2e"}');
       var term = primus.substream('terminal');
+      var buffer = '';
       term.on('data', function (data) {
-        if(~data.indexOf('/')) {
+        buffer += data;
+        if(~buffer.indexOf('/')) {
           pass = true;
           return primus.end();
         }
+        term.write('pwd\n');
       });
-      term.write('pwd\n');
       primus.on('end', function () {
         if (pass) {
           return done();
@@ -356,13 +360,15 @@ Lab.experiment('test connectivity', function () {
       var primus = new Socket('http://localhost:3111?type=filibuster&opts={"name":"vt100"}' +
         '&args={"containerId": "b9fd4051eb2e"}');
       var term = primus.substream('terminal');
+      var buffer = '';
       term.on('data', function (data) {
-        if(~data.indexOf('vt100')) {
+        buffer += data;
+        if(~buffer.indexOf('vt100')) {
           pass = true;
           return primus.end();
         }
+        term.write('echo $TERM\n');
       });
-      term.write('echo $TERM\n');
       primus.on('end', function () {
         if (pass) {
           return done();
@@ -376,13 +382,15 @@ Lab.experiment('test connectivity', function () {
         'type=filibuster&opts={"env":{"TEST":"thisIsEnv"}}' +
         '&args={"containerId": "b9fd4051eb2e"}');
       var term = primus.substream('terminal');
+      var buffer = '';
       term.on('data', function (data) {
-        if(~data.indexOf('thisIsEnv')) {
+        buffer += data;
+        if(~buffer.indexOf('thisIsEnv')) {
           pass = true;
           return primus.end();
         }
+        term.write('echo $TEST\n');
       });
-      term.write('echo $TEST\n');
       primus.on('end', function () {
         if (pass) {
           return done();
