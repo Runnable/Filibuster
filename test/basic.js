@@ -110,7 +110,7 @@ Lab.experiment('test middleware', function () {
     } catch (err) {
       return new Error("failed to catch invalid middleware");
     }
-    var primus = new Socket('http://localhost:3111');
+    var primus = new Socket('http://localhost:3111?type=filibuster');
     primus.on('error', function () {
       server.close(done);
     });
@@ -371,6 +371,19 @@ Lab.experiment('test connectivity', function () {
           return done();
         }
         return done(new Error("failed to pass opts"));
+      });
+    });
+    Lab.test('no filibuster filter', function (done) {
+      var pass = true;
+      var primus = new Socket('http://localhost:3111?type=other');
+      primus.on('data', function () {
+        pass = false;
+      });
+      primus.on('end', function () {
+        if (pass) {
+          return done();
+        }
+        return done(new Error("failed disconnet"));
       });
     });
   });
