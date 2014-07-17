@@ -4,6 +4,7 @@ var term = require('./'+configs.nsType+'.js');
 var Primus = require('primus');
 var express = require('express');
 var http = require('http');
+var docker = require('./docker.js');
 
 function Filibuster (services) {
   services = sanitizeInput(services);
@@ -16,16 +17,20 @@ function Filibuster (services) {
     if (socket.query.type !== 'filibuster') {
       return socket.end();
     }
-    term.connect(
-      getArgs(socket.query),
-      getPtyOptions(socket.query),
-      function(err, terminal) {
-        if(err) {
-          console.error("term returned err:", err);
-          return socket.end();
-        }
-        connectStreams(socket, terminal);
-      });
+    getArgs(socket.query, function(err, args){
+      if (err) { return socket.end(); }
+
+      term.connect(
+        args,
+        getPtyOptions(socket.query),
+        function(err, terminal) {
+          if(err) {
+            console.error("term returned err:", err);
+            return socket.end();
+          }
+          connectStreams(socket, terminal);
+        });
+    });
   });
 
   return services.httpServer;
@@ -80,14 +85,17 @@ function connectStreams (socket, terminal) {
   });
 }
 
-function getArgs(query) {
+function getArgs(query, cb) {
   var args = {};
 
   if (typeof query.args === 'string') {
     args = JSON.parse(query.args);
   }
-
-  return args;
+  docker.getContainerPid(args.containerId, function(err, pid) {
+    if(err) { return cb(err); }
+    args.pid = pid;
+    cb(null, args);
+  });
 }
 
 function getPtyOptions(query) {

@@ -1,5 +1,7 @@
 {
   "nsType": "testDriver",
   "socketType": "websockets",
-  "port": 3111
+  "port": 3111,
+  "dockerHost": "http://localhost",
+  "dockerPort": 4242
 }

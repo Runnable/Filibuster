@@ -9,6 +9,7 @@ var Socket = Primus.createSocket({
   },
   parser: 'JSON'
 });
+var docker = require('./fixtures/docker.js');
 
 Lab.experiment('init', function () {
   var testServer;
@@ -110,7 +111,8 @@ Lab.experiment('test middleware', function () {
     } catch (err) {
       return new Error("failed to catch invalid middleware");
     }
-    var primus = new Socket('http://localhost:3111?type=filibuster');
+    var primus = new Socket('http://localhost:3111?type=filibuster' +
+      '&args={"containerId": "b9fd4051eb2e"}');
     primus.on('error', function () {
       server.close(done);
     });
@@ -118,6 +120,13 @@ Lab.experiment('test middleware', function () {
 });
 
 Lab.experiment('test connectivity', function () {
+  var dockerServer = null;
+  Lab.before(function(done) {
+    dockerServer = docker.listen(config.dockerPort, done);
+  });
+  Lab.after(function(done) {
+    dockerServer.close(done);
+  });
   var server = {};
   Lab.beforeEach(function(done){
     try {
@@ -138,7 +147,8 @@ Lab.experiment('test connectivity', function () {
     var pass = false;
     Lab.beforeEach(function (done) {
       pass = false;
-      primus = new Socket('http://localhost:3111?type=filibuster');
+      primus = new Socket('http://localhost:3111?' +
+        'type=filibuster&args={"containerId": "b9fd4051eb2e"}');
       done();
     });
     var check = function(errMsg, done) {
@@ -286,7 +296,8 @@ Lab.experiment('test connectivity', function () {
   Lab.experiment('session with opts', function () {
     Lab.test('terminal start error', function (done) {
       var pass = true;
-      var primus = new Socket('http://localhost:3111?type=filibuster&args={"error":"222"}');
+      var primus = new Socket('http://localhost:3111?type=filibuster' +
+        '&args={"error":"222", "containerId": "b9fd4051eb2e"}');
       var term = primus.substream('terminal');
       term.on('data', function (data) {
         pass = false;
@@ -300,7 +311,9 @@ Lab.experiment('test connectivity', function () {
     });
     Lab.test('cols and row', function (done) {
       var pass = false;
-      var primus = new Socket('http://localhost:3111?type=filibuster&opts={"cols":"222","rows":"123"}');
+      var primus = new Socket('http://localhost:3111?'+
+        'type=filibuster&opts={"cols":"222","rows":"123"}'+
+        '&args={"containerId": "b9fd4051eb2e"}');
       var term = primus.substream('terminal');
       term.on('data', function (data) {
         if(~data.indexOf('123')){
@@ -321,7 +334,8 @@ Lab.experiment('test connectivity', function () {
     });
     Lab.test('set cwd to /', function (done) {
       var pass = false;
-      var primus = new Socket('http://localhost:3111?type=filibuster&opts={"cwd":"/"}');
+      var primus = new Socket('http://localhost:3111?type=filibuster&opts={"cwd":"/"}' +
+        '&args={"containerId": "b9fd4051eb2e"}');
       var term = primus.substream('terminal');
       term.on('data', function (data) {
         if(~data.indexOf('/')) {
@@ -339,7 +353,8 @@ Lab.experiment('test connectivity', function () {
     });
     Lab.test('term', function (done) {
       var pass = false;
-      var primus = new Socket('http://localhost:3111?type=filibuster&opts={"name":"vt100"}');
+      var primus = new Socket('http://localhost:3111?type=filibuster&opts={"name":"vt100"}' +
+        '&args={"containerId": "b9fd4051eb2e"}');
       var term = primus.substream('terminal');
       term.on('data', function (data) {
         if(~data.indexOf('vt100')) {
@@ -357,7 +372,9 @@ Lab.experiment('test connectivity', function () {
     });
     Lab.test('env', function (done) {
       var pass = false;
-      var primus = new Socket('http://localhost:3111?type=filibuster&opts={"env":{"TEST":"thisIsEnv"}}');
+      var primus = new Socket('http://localhost:3111?' +
+        'type=filibuster&opts={"env":{"TEST":"thisIsEnv"}}' +
+        '&args={"containerId": "b9fd4051eb2e"}');
       var term = primus.substream('terminal');
       term.on('data', function (data) {
         if(~data.indexOf('thisIsEnv')) {
