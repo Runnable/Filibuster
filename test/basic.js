@@ -252,7 +252,7 @@ Lab.experiment('test connectivity', function () {
       var cs = primus.substream('clientEvents');
       var term = primus.substream('terminal');
       check('echo failed to ping', done);
-      cs.on('data', function (data) {
+      cs.on('data', function () {
         cs.write({
           event: "resize",
           data: {
@@ -287,7 +287,7 @@ Lab.experiment('test connectivity', function () {
     });
     Lab.test('send exit command to terminal', function (done) {
       var term = primus.substream('terminal');
-      term.on('data', function (data) {
+      term.on('data', function () {
         pass = true;
         term.write('exit\n');
       });
@@ -301,7 +301,7 @@ Lab.experiment('test connectivity', function () {
       var primus = new Socket('http://localhost:3111?type=filibuster' +
         '&args={"error":"222", "containerId": "b9fd4051eb2e"}');
       var term = primus.substream('terminal');
-      term.on('data', function (data) {
+      term.on('data', function () {
         pass = false;
       });
       primus.on('end', function () {
