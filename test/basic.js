@@ -27,7 +27,7 @@ Lab.experiment('test app inputs', function () {
   var server = {};
   Lab.test('no inputs', function (done) {
     try {
-      server = require('../filibuster.js');
+      server = require('../lib/filibuster.js');
       server = server();
     } catch (err) {
       return new Error("failed to catch invalid middleware");
@@ -38,7 +38,7 @@ Lab.experiment('test app inputs', function () {
     var express = require('express');
     var app = express();
     try {
-      server = require('../filibuster.js');
+      server = require('../lib/filibuster.js');
       server = server({
         express: app
       });
@@ -53,7 +53,7 @@ Lab.experiment('test app inputs', function () {
     var http = require('http');
     var httpServer = http.createServer(app);
     try {
-      server = require('../filibuster.js');
+      server = require('../lib/filibuster.js');
       server = server({
         httpServer: httpServer
       });
@@ -69,7 +69,7 @@ Lab.experiment('test app inputs', function () {
     var httpServer = http.createServer(app);
     var primus = new Primus(httpServer,{transformer: config.socketType,parser: 'JSON'});
     try {
-      server = require('../filibuster.js');
+      server = require('../lib/filibuster.js');
       server = server({
         primus: primus
       });
@@ -84,7 +84,7 @@ Lab.experiment('test middleware', function () {
   var server = {};
   Lab.test('invalid middleware', function (done) {
     try {
-      server = require('../filibuster.js');
+      server = require('../lib/filibuster.js');
       var args = {
         middlewares: {
           fake: "fake"
@@ -98,7 +98,7 @@ Lab.experiment('test middleware', function () {
   });
   Lab.test('valid middleware', function (done) {
     try {
-      server = require('../filibuster.js');
+      server = require('../lib/filibuster.js');
       var args = {
         middlewares: {
           test: function(req,res, next) {
@@ -130,7 +130,7 @@ Lab.experiment('test connectivity', function () {
   var server = {};
   Lab.beforeEach(function(done){
     try {
-      server = require('../filibuster.js');
+      server = require('../lib/filibuster.js');
       server = server();
       server.listen(config.port, done);
     } catch (err) {
