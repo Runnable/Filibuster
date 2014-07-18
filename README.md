@@ -1,6 +1,6 @@
 Filibuster
 ==========
-
+![Filibuster](https://s3.amazonaws.com/uploads.hipchat.com/31372/651154/4B81cwE0Ynn3CwA/pirate_270x270-24-20130116-39.jpg)
 Allow host to enter into the namespaces of running containers.
 
 
@@ -17,7 +17,7 @@ However it does use query parameters for inputs
 
 REQUIRED
 
-?pid  = pid of the container you want to attach too
+?containerID  = container of the container you want to attach too
 
 *optional*
 
