@@ -31,8 +31,7 @@
     "primus": "2.3.0",
     "ws": "0.4.31",
     "substream": "0.0.2",
-    "commander": "2.2.0",
-    "dockerode": "^2.0.1"
+    "commander": "2.2.0"
   },
   "devDependencies": {
     "lab": "3.2.1"

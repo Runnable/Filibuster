@@ -22,7 +22,7 @@ which('nsenter', function(err, cmdpath) {
 // returns stream to STDIN of container
 // return null if invalid argument
 var connect = function(nsArgs, streamOpts, cb) {
-  if(!nsArgs.pid) {
+  if(!nsArgs.containerId) {
     return null;
   }
   if (!found) {

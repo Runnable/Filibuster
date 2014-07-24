@@ -5,8 +5,8 @@ var connect = function(args, streamOpts, cb) {
   if (args.error) {
     return cb(new Error("test_error"));
   }
-  if (!args.pid) {
-    return cb(new Error('failed to get pid'));
+  if (!args.containerId) {
+    return cb(new Error('failed to provide containerId'));
   }
   var term = pty.spawn('bash', [], streamOpts);
   cb(null, term);

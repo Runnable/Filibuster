@@ -9,7 +9,6 @@ var Socket = Primus.createSocket({
   },
   parser: 'JSON'
 });
-var docker = require('./fixtures/docker.js');
 
 Lab.experiment('init', function () {
   var testServer;
@@ -120,13 +119,6 @@ Lab.experiment('test middleware', function () {
 });
 
 Lab.experiment('test connectivity', function () {
-  var dockerServer = null;
-  Lab.before(function(done) {
-    dockerServer = docker.listen(config.dockerPort, done);
-  });
-  Lab.after(function(done) {
-    dockerServer.close(done);
-  });
   var server = {};
   Lab.beforeEach(function(done){
     try {
@@ -409,6 +401,19 @@ Lab.experiment('test connectivity', function () {
           return done();
         }
         return done(new Error("failed disconnet"));
+      });
+    });
+    Lab.test('should error if no containerId passed', function (done) {
+      var pass = true;
+      var primus = new Socket('http://localhost:3111?type=filibuster');
+      primus.on('data', function () {
+        pass = false;
+      });
+      primus.on('end', function () {
+        if (pass) {
+          return done();
+        }
+        return done(new Error("failed to return error for no containerId"));
       });
     });
   });
