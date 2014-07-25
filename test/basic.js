@@ -152,8 +152,9 @@ Lab.experiment('test connectivity', function () {
       });
     };
     Lab.test('connect', function (done) {
-      primus.on('data', function (data) {
-        if(data.name === 'terminal'){
+      var cs = primus.substream('clientEvents');
+      cs.on('data', function (data) {
+        if(data.event === 'connected'){
           pass = true;
           return primus.end();
         }
