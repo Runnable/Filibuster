@@ -1,5 +1,5 @@
 {
-  "nsType": "sshDriver",
+  "nsType": "nsenterDriver",
   "socketType": "websockets",
-  "port": 3111
+  "port": 3112
 }
