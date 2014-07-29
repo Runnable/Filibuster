@@ -6,9 +6,9 @@ var events = require('events');
 var eventEmitter = new events.EventEmitter();
 var found = false;
 
-which('nsenter', function(err, cmdpath) {
+which('docker-enter', function(err, cmdpath) {
   if (err) {
-    console.log('err with nsenter: '+err);
+    console.log('err with docker-enter: '+err);
     process.exit(1);
   }
   nsenterPath = cmdpath;
@@ -17,10 +17,8 @@ which('nsenter', function(err, cmdpath) {
 });
 
 // pid of container to connect to *REQUIRED
-// Args are argument for nsenter. defaults to all
-// Opts are option for pty default empty
-// returns stream to STDIN of container
-// return null if invalid argument
+// Args are argument for docker-enter.
+// docker enter is a script which just needs docker containerId
 var connect = function(nsArgs, streamOpts, cb) {
   if(!nsArgs.containerId) {
     return null;
@@ -34,9 +32,8 @@ var connect = function(nsArgs, streamOpts, cb) {
   spawnTerm();
 
   function spawnTerm() {
-    var args = nsArgs.cmd || "--mount --uts --ipc --net --pid";
-    var cmd = "sudo " + nsenterPath + " --target " + nsArgs.pid + " " + args;
-    var term = pty.spawn('bash', ["-c", cmd], streamOpts);
+    var cmd = 'sudo ' + nsenterPath + ' ' + nsArgs.containerId;
+    var term = pty.spawn('bash', ['-c', cmd], streamOpts);
     cb(null, term);
   }
 };
