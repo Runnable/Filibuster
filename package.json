@@ -30,7 +30,8 @@
     "primus": "2.4.0",
     "ws": "0.4.31",
     "substream": "0.1.1",
-    "commander": "2.2.0"
+    "commander": "2.2.0",
+    "dotenv": "^0.4.0"
   },
   "devDependencies": {
     "lab": "3.2.1"
