@@ -1,8 +1,8 @@
 'use strict';
-var config = require("./configs.js");
+require('../lib/loadenv.js')();
 var Primus = require('primus');
 var Socket = Primus.createSocket({
-  transformer: config.primus.transformer,
+  transformer: process.env.SOCKET_TYPE,
   parser: 'JSON'
 });
 // proxy stream to destination

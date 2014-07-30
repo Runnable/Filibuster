@@ -1,5 +1,5 @@
 'use strict';
-var config = require("../configs.js");
+require('../lib/loadenv.js')();
 var Lab = require('lab');
 var Primus = require('primus');
 var Socket = Primus.createSocket({
@@ -66,7 +66,10 @@ Lab.experiment('test app inputs', function () {
     var app = express();
     var http = require('http');
     var httpServer = http.createServer(app);
-    var primus = new Primus(httpServer,{transformer: config.socketType,parser: 'JSON'});
+    var primus = new Primus(httpServer, {
+      transformer: process.env.SOCKET_TYPE,
+      parser: 'JSON'
+    });
     try {
       server = require('../lib/filibuster.js');
       server = server({
@@ -106,7 +109,7 @@ Lab.experiment('test middleware', function () {
         }
       };
       server = server(args);
-      server.listen(config.port);
+      server.listen(process.env.PORT);
     } catch (err) {
       return new Error("failed to catch invalid middleware");
     }
@@ -124,7 +127,7 @@ Lab.experiment('test connectivity', function () {
     try {
       server = require('../lib/filibuster.js');
       server = server();
-      server.listen(config.port, done);
+      server.listen(process.env.PORT, done);
     } catch (err) {
       return done(err);
     }
