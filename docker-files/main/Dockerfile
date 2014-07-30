@@ -9,7 +9,7 @@ FROM registry.runnable.com/core/filibuster_base:latest
 WORKDIR /
 
 # Download Repo
-RUN git clone git@github.com:CodeNow/Filibuster.git
+RUN git clone git@github.com:Runnable/Filibuster.git
 
 WORKDIR /Filibuster
 
