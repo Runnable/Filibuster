@@ -46,8 +46,10 @@ This stream only accepts objects formated like so:
   event: "EVENT_NAME", // must be string
   data: data // can be anything
 }
+```
 
 to resize the terminal
+
 ```
 {
   event: "resize"
@@ -57,20 +59,23 @@ to resize the terminal
   }
 }
 ```
+
 to send ping event
+
 ```
 {
   event: "ping"
 }
 ```
+
 this stream will also emit errors with the form
+
 ```
 {
   event: "error"
   data: "error data"
 }
 ```
-
 
 Tests
 -----
