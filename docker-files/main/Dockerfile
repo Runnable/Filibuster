@@ -1,18 +1,22 @@
 #
 # filibuster_main Dockerfile
-# Author anandkumarpatel
-##                 #
+# copies filibuster and node to disk
+# REQUIRED MOUNTS:
+# /root:/host/root:rw
+# /usr/local/bin/:/host/bin
+# /etc/init.d
+# anandkumarpatel
+###         #
 
 # Pull base image.
-FROM registry.runnable.com/core/filibuster_base:latest
+FROM registry.runnable.com/runnableio/filibuster_base:latest
 
 WORKDIR /
 
 # Download Repo
-RUN git clone git@github.com:Runnable/Filibuster.git
+RUN git clone git@github.com:CodeNow/filibuster.git
 
-WORKDIR /Filibuster
-
+WORKDIR /filibuster
 RUN npm install
 
 # Expose port to Host
