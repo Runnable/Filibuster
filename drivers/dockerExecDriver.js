@@ -32,7 +32,7 @@ var connect = function(nsArgs, streamOpts, cb) {
   spawnTerm();
 
   function spawnTerm() {
-    var cmd = dockerPath + ' exec ' + nsArgs.containerId + ' bash';
+    var cmd = dockerPath + ' exec -it ' + nsArgs.containerId + ' bash';
     var term = pty.spawn('bash', ['-c', cmd], streamOpts);
     cb(null, term);
   }
