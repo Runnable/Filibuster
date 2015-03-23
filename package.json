@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/Runnable/Filibuster",
   "dependencies": {
-    "pty.js": "0.2.4",
+    "pty.js": "0.2.6",
     "which": "1.0.5",
     "express": "4.6.1",
     "eson": "0.5.0",
