@@ -211,7 +211,7 @@ Lab.experiment('test connectivity', function () {
       check('error closing term', done);
       var term = primus.substream('terminal');
       pass = true;
-      term.write('exit\n');
+      term.write('exit\r\n');
     });
   });
 
