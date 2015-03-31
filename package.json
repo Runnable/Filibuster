@@ -35,5 +35,10 @@
   },
   "devDependencies": {
     "lab": "3.2.1"
+  },
+  "engineStrict": true,
+  "engine": {
+    "node": "0.12.0",
+    "npm": "2.7.4"
   }
 }
