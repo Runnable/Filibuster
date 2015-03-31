@@ -2,6 +2,7 @@
 require('../lib/loadenv.js')();
 var Lab = require('lab');
 var Primus = require('primus');
+var filibusterServer = require('../lib/filibuster.js');
 var Socket = Primus.createSocket({
   transformer: 'websockets',
   plugin: {
@@ -23,43 +24,24 @@ Lab.experiment('init', function () {
 });
 
 Lab.experiment('test app inputs', function () {
-  var server = {};
-  Lab.test('no inputs', function (done) {
-    try {
-      server = require('../lib/filibuster.js');
-      server = server();
-    } catch (err) {
-      return new Error("failed to catch invalid middleware");
-    }
-    return done();
-  });
+  var server;
   Lab.test('only express', function (done) {
     var express = require('express');
     var app = express();
-    try {
-      server = require('../lib/filibuster.js');
-      server = server({
-        express: app
-      });
-    } catch (err) {
-      return new Error("failed to catch invalid middleware");
-    }
-    return done();
+    server = filibusterServer({
+      express: app
+    });
+    done();
   });
   Lab.test('only http', function (done) {
     var express = require('express');
     var app = express();
     var http = require('http');
     var httpServer = http.createServer(app);
-    try {
-      server = require('../lib/filibuster.js');
-      server = server({
-        httpServer: httpServer
-      });
-    } catch (err) {
-      return new Error("failed to catch invalid middleware");
-    }
-    return done();
+    server = filibusterServer({
+      httpServer: httpServer
+    });
+    done();
   });
   Lab.test('only primus', function (done) {
     var express = require('express');
@@ -70,67 +52,18 @@ Lab.experiment('test app inputs', function () {
       transformer: process.env.SOCKET_TYPE,
       parser: 'JSON'
     });
-    try {
-      server = require('../lib/filibuster.js');
-      server = server({
-        primus: primus
-      });
-    } catch (err) {
-      return new Error("failed to catch invalid middleware");
-    }
-    return done();
-  });
-});
-
-Lab.experiment('test middleware', function () {
-  var server = {};
-  Lab.test('invalid middleware', function (done) {
-    try {
-      server = require('../lib/filibuster.js');
-      var args = {
-        middlewares: {
-          fake: "fake"
-        }
-      };
-      server = server(args);
-    } catch (err) {
-      return done();
-    }
-    return new Error("failed to catch invalid middleware");
-  });
-  Lab.test('valid middleware', function (done) {
-    try {
-      server = require('../lib/filibuster.js');
-      var args = {
-        middlewares: {
-          test: function(req,res, next) {
-            next("test");
-          }
-        }
-      };
-      server = server(args);
-      server.listen(process.env.PORT);
-    } catch (err) {
-      return new Error("failed to catch invalid middleware");
-    }
-    var primus = new Socket('http://localhost:3111?type=filibuster' +
-      '&args={"containerId": "b9fd4051eb2e"}');
-    primus.on('error', function () {
-      server.close(done);
+    server = filibusterServer({
+      primus: primus
     });
+    done();
   });
 });
 
 Lab.experiment('test connectivity', function () {
-  var server = {};
+  var server;
   Lab.beforeEach(function(done){
-    try {
-      server = require('../lib/filibuster.js');
-      server = server();
-      server.listen(process.env.PORT, done);
-    } catch (err) {
-      return done(err);
-    }
+    server = filibusterServer();
+    server.listen(process.env.PORT, done);
   });
 
   Lab.afterEach(function(done){
@@ -139,32 +72,23 @@ Lab.experiment('test connectivity', function () {
 
   Lab.experiment('session', function () {
     var primus;
-    var pass = false;
+    var pass;
     Lab.beforeEach(function (done) {
       pass = false;
       primus = new Socket('http://localhost:3111?' +
         'type=filibuster&args={"containerId": "b9fd4051eb2e"}');
-      done();
+      primus.once('open', done);
     });
     var check = function(errMsg, done) {
-      primus.on('end', function () {
+      primus.once('end', function () {
         if (pass) {
           return done();
         }
         return done(new Error(errMsg));
       });
     };
-    Lab.test('connect', function (done) {
-      var cs = primus.substream('clientEvents');
-      cs.on('data', function (data) {
-        if(data.event === 'connected'){
-          pass = true;
-          return primus.end();
-        }
-      });
-      check('failed to connect', done);
-    });
     Lab.test('send term command', function (done) {
+      check('echo failed to run', done);
       var term = primus.substream('terminal');
       var buffer = '';
       term.on('data', function (data) {
@@ -173,121 +97,121 @@ Lab.experiment('test connectivity', function () {
           pass = true;
           return primus.end();
         }
-        term.write('echo TEST\n');
       });
-      check('echo failed to run', done);
+      term.write('echo TEST\n');
     });
     Lab.test('send clientEventsStream bogus event not object', function (done) {
+      check('echo failed to ping', done);
       var cs = primus.substream('clientEvents');
       cs.on('data', function (data) {
         if(data.event === 'error' && data.data === "invalid input"){
           pass = true;
           return primus.end();
         }
-        cs.write('bogus');
       });
-      check('echo failed to ping', done);
+      cs.write('bogus');
     });
     Lab.test('send clientEventsStream ping event', function (done) {
+      check('echo failed to ping', done);
       var cs = primus.substream('clientEvents');
       cs.on('data', function (data) {
         if(data.event === 'pong') {
           pass = true;
           return primus.end();
         }
-        cs.write({
-          event: "ping"
-        });
       });
-      check('echo failed to ping', done);
+      cs.write({
+        event: "ping"
+      });
     });
     Lab.test('send clientEventsStream bogus resize event with no data', function (done) {
+      check('echo failed to ping', done);
       var cs = primus.substream('clientEvents');
       cs.on('data', function (data) {
         if(data.event === 'error' && data.data === "invalid x and y data"){
           pass = true;
           return primus.end();
         }
-        cs.write({
-          event: "resize"
-        });
       });
-      check('echo failed to ping', done);
+      cs.write({
+        event: "resize"
+      });
     });
     Lab.test('send clientEventsStream bogus resize event with null data', function (done) {
+      check('echo failed to ping', done);
       var cs = primus.substream('clientEvents');
       cs.on('data', function (data) {
         if(data.event === 'error' && data.data === "invalid x and y data"){
           pass = true;
           return primus.end();
         }
-        cs.write({
-          event: "resize",
-          data: []
-        });
       });
-      check('echo failed to ping', done);
+      cs.write({
+        event: "resize",
+        data: []
+      });
     });
     Lab.test('send clientEventsStream bogus resize event with only x data', function (done) {
+      check('echo failed to ping', done);
       var cs = primus.substream('clientEvents');
       cs.on('data', function (data) {
         if(data.event === 'error' && data.data === "invalid x and y data"){
           pass = true;
           return primus.end();
         }
-        cs.write({
-          event: "resize",
-          data: {
-            x: 0
-          }
-        });
       });
-      check('echo failed to ping', done);
+      cs.write({
+        event: "resize",
+        data: {
+          x: 0
+        }
+      });
     });
     Lab.test('send clientEventsStream correct resize event', function (done) {
       var cs = primus.substream('clientEvents');
       var term = primus.substream('terminal');
       check('echo failed to ping', done);
+      term.on('data', function (data) {
+        if(~data.indexOf('222')){
+          pass = true;
+          term.write('tput lines\n');
+        }
+        if(~data.indexOf('123') && pass){
+          return primus.end();
+        }
+      });
       cs.on('data', function () {
-        cs.write({
-          event: "resize",
-          data: {
-            x: 222,
-            y: 123
-          }
-        });
         term.write('tput cols\n');
-        term.on('data', function (data) {
-          if(~data.indexOf('222')){
-            pass = true;
-            term.write('tput lines\n');
-          }
-          if(~data.indexOf('123') && pass){
-            return primus.end();
-          }
-        });
+      });
+      cs.write({
+        event: "resize",
+        data: {
+          x: 222,
+          y: 123
+        }
+      });
+      cs.write({
+        event: "ping"
       });
     });
     Lab.test('send clientEventsStream bogus event', function (done) {
+      check('echo failed to ping', done);
       var cs = primus.substream('clientEvents');
       cs.on('data', function (data) {
         if(data.event === 'error' && data.data === "event not supported"){
           pass = true;
           return primus.end();
         }
-        cs.write({
-          event: "bogus"
-        });
       });
-      check('echo failed to ping', done);
+      cs.write({
+        event: "bogus"
+      });
     });
     Lab.test('send exit command to terminal', function (done) {
-      var term = primus.substream('terminal');
-      term.on('data', function () {
-        pass = true;
-        term.write('exit\n');
-      });
       check('error closing term', done);
+      var term = primus.substream('terminal');
+      pass = true;
+      term.write('exit\n');
     });
   });
 
@@ -300,7 +224,7 @@ Lab.experiment('test connectivity', function () {
       term.on('data', function () {
         pass = false;
       });
-      primus.on('end', function () {
+      primus.once('end', function () {
         if (pass) {
           return done();
         }
@@ -312,6 +236,15 @@ Lab.experiment('test connectivity', function () {
       var primus = new Socket('http://localhost:3111?'+
         'type=filibuster&opts={"cols":"222","rows":"123"}'+
         '&args={"containerId": "b9fd4051eb2e"}');
+      primus.once('end', function () {
+        if (pass) {
+          return done();
+        }
+        return done(new Error("failed to pass opts"));
+      });
+      primus.once('open', function() {
+        term.write('tput lines\n');
+      });
       var term = primus.substream('terminal');
       term.on('data', function (data) {
         if(~data.indexOf('123')){
@@ -321,19 +254,21 @@ Lab.experiment('test connectivity', function () {
         if(~data.indexOf('222') && pass){
           return primus.end();
         }
-        term.write('tput lines\n');
-      });
-      primus.on('end', function () {
-        if (pass) {
-          return done();
-        }
-        return done(new Error("failed to pass opts"));
       });
     });
     Lab.test('set cwd to /', function (done) {
       var pass = false;
       var primus = new Socket('http://localhost:3111?type=filibuster&opts={"cwd":"/"}' +
         '&args={"containerId": "b9fd4051eb2e"}');
+      primus.once('end', function () {
+        if (pass) {
+          return done();
+        }
+        return done(new Error("failed to pass opts"));
+      });
+      primus.once('open', function() {
+        term.write('pwd\n');
+      });
       var term = primus.substream('terminal');
       var buffer = '';
       term.on('data', function (data) {
@@ -342,19 +277,21 @@ Lab.experiment('test connectivity', function () {
           pass = true;
           return primus.end();
         }
-        term.write('pwd\n');
-      });
-      primus.on('end', function () {
-        if (pass) {
-          return done();
-        }
-        return done(new Error("failed to pass opts"));
       });
     });
     Lab.test('term', function (done) {
       var pass = false;
       var primus = new Socket('http://localhost:3111?type=filibuster&opts={"name":"vt100"}' +
         '&args={"containerId": "b9fd4051eb2e"}');
+      primus.once('end', function () {
+        if (pass) {
+          return done();
+        }
+        return done(new Error("failed to pass opts"));
+      });
+      primus.once('open', function() {
+        term.write('echo $TERM\n');
+      });
       var term = primus.substream('terminal');
       var buffer = '';
       term.on('data', function (data) {
@@ -363,13 +300,6 @@ Lab.experiment('test connectivity', function () {
           pass = true;
           return primus.end();
         }
-        term.write('echo $TERM\n');
-      });
-      primus.on('end', function () {
-        if (pass) {
-          return done();
-        }
-        return done(new Error("failed to pass opts"));
       });
     });
     Lab.test('env', function (done) {
@@ -377,6 +307,15 @@ Lab.experiment('test connectivity', function () {
       var primus = new Socket('http://localhost:3111?' +
         'type=filibuster&opts={"env":{"TEST":"thisIsEnv"}}' +
         '&args={"containerId": "b9fd4051eb2e"}');
+      primus.once('end', function () {
+        if (pass) {
+          return done();
+        }
+        return done(new Error("failed to pass opts"));
+      });
+      primus.once('open', function() {
+        term.write('echo $TEST\n');
+      });
       var term = primus.substream('terminal');
       var buffer = '';
       term.on('data', function (data) {
@@ -385,13 +324,6 @@ Lab.experiment('test connectivity', function () {
           pass = true;
           return primus.end();
         }
-        term.write('echo $TEST\n');
-      });
-      primus.on('end', function () {
-        if (pass) {
-          return done();
-        }
-        return done(new Error("failed to pass opts"));
       });
     });
     Lab.test('no filibuster filter', function (done) {
@@ -400,7 +332,7 @@ Lab.experiment('test connectivity', function () {
       primus.on('data', function () {
         pass = false;
       });
-      primus.on('end', function () {
+      primus.once('end', function () {
         if (pass) {
           return done();
         }
@@ -413,7 +345,7 @@ Lab.experiment('test connectivity', function () {
       primus.on('data', function () {
         pass = false;
       });
-      primus.on('end', function () {
+      primus.once('end', function () {
         if (pass) {
           return done();
         }
