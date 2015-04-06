@@ -3,8 +3,9 @@ machine:
     NODE_ENV: test
 dependencies:
   override:
-    - nvm install 0.10.26
-    - nvm alias default 0.10.26
+    - nvm install 0.10.28
+    - nvm alias default 0.10.28
+    - npm install -g npm@2.1.18
     - npm install
 test:
   override:
