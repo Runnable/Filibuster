@@ -23,15 +23,16 @@
   },
   "homepage": "https://github.com/Runnable/Filibuster",
   "dependencies": {
-    "pty.js": "0.2.6",
-    "which": "1.0.5",
-    "express": "4.6.1",
-    "eson": "0.5.0",
-    "primus": "2.4.0",
-    "ws": "0.4.31",
-    "substream": "0.1.3",
     "commander": "2.2.0",
-    "dotenv": "^0.4.0"
+    "dotenv": "^0.4.0",
+    "engine.io": "^1.5.1",
+    "engine.io-client": "^1.5.1",
+    "eson": "0.5.0",
+    "express": "4.6.1",
+    "primus": "^3.0.2",
+    "pty.js": "0.2.6",
+    "substream": "0.1.3",
+    "which": "1.0.5"
   },
   "devDependencies": {
     "lab": "3.2.1"

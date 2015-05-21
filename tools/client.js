@@ -1,7 +1,7 @@
 var program = require('commander');
 var Primus = require('primus');
 var Socket = Primus.createSocket({
-  transformer: 'websockets',
+  transformer: process.env.SOCKET_TYPE,
   plugin: {
     'substream': require('substream')
   },

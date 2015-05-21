@@ -19,11 +19,11 @@ if(!program.port || !program.host) {
 var doneCnt=0;
 var startCnt=0;
 var start = function(cb) {
-  var Socket = Primus.createSocket({ 
-    transformer: 'websockets',
+  var Socket = Primus.createSocket({
+    transformer: process.env.SOCKET_TYPE,
     plugin: {
       'substream': require('substream')
-    }, 
+    },
     parser: 'JSON'
   });
   var addr = 'http://'+program.host+":"+program.port;
@@ -34,8 +34,8 @@ var start = function(cb) {
     var clientEvents = primus.substream('clientEvents');
     var start = new Date();
     var onRep = function() {
-      start = new Date(); 
-      terminal.write("pwd\n"); 
+      start = new Date();
+      terminal.write("pwd\n");
     };
     onRep();
     terminal.on('data', function function_name (data) {

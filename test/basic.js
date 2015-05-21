@@ -4,7 +4,7 @@ var Lab = require('lab');
 var Primus = require('primus');
 var filibusterServer = require('../lib/filibuster.js');
 var Socket = Primus.createSocket({
-  transformer: 'websockets',
+  transformer: process.env.SOCKET_TYPE,
   plugin: {
     'substream': require('substream')
   },
