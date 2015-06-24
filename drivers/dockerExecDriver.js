@@ -66,8 +66,11 @@ function connect (nsArgs, streamOpts, cb) {
 
     // If we were provided a uuid, map the new terminal to that uuid
     if (uuid) {
-      term._session_uuid = uuid;
       terminalSessions[uuid] = term;
+      // Remove the terminal from the map on close
+      term.on('close', function () {
+        delete terminalSessions[uuid];
+      });
     }
 
     return cb(null, term);
