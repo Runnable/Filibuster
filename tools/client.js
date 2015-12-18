@@ -1,5 +1,11 @@
+/**
+ * @module tools/client
+ */
 var program = require('commander');
 var Primus = require('primus');
+
+var log = require('../lib/logger').getChild(__filename);
+
 var Socket = Primus.createSocket({
   transformer: 'websockets',
   plugin: {
@@ -33,23 +39,27 @@ var cmd = JSON.stringify({
 var addr = 'http://'+program.host+":"+program.port;
 addr += "?args="+cmd;
 // TODO add test of args
-console.log("connecting to ", addr);
+log.trace({
+  addr: addr
+}, 'connecting');
 var primus = new Socket(addr);
 
 primus.on('error', function (err) {
-  console.log('Filibuster: error occured', err);
+  log.error({
+    err: err
+  }, 'Filibuster error occured');
   process.exit(0);
 });
 primus.on('end', function () {
-  console.log('Filibuster: connection closed');
+  log.info('filibuster connection closed');
   process.exit(0);
 });
 primus.on('reconnect', function () {
-  console.log('Filibuster: reconnecting reconnect event happend');
+  log.info('filibuster reconnecting reconnect event');
 });
 
 var onConnect = function() {
-  console.log('connection established');
+  log.info('connection established');
   var terminal = primus.substream('terminal');
   var clientEvents = primus.substream('clientEvents');
 

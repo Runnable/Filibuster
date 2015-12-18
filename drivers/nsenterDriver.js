@@ -1,14 +1,23 @@
+/**
+ * @module drivers/nsenterDriver
+ */
 'use strict';
-var nsenterPath;
+
+var events = require('events');
 var pty = require('pty.js');
 var which = require('which');
-var events = require('events');
+
+var log = require('../lib/logger').getChild(__filename);
+
 var eventEmitter = new events.EventEmitter();
 var found = false;
+var nsenterPath;
 
 which('docker-enter', function(err, cmdpath) {
   if (err) {
-    console.log('err with docker-enter: '+err);
+    log.fatal({
+      err: err
+    }, 'err with docker-enter');
     process.exit(1);
   }
   nsenterPath = cmdpath;

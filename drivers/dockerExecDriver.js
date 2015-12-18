@@ -1,14 +1,23 @@
+/**
+ * @module drivers/dockerExecDriver
+ */
 'use strict';
-var dockerPath;
+
+var events = require('events');
 var pty = require('pty.js');
 var which = require('which');
-var events = require('events');
+
+var log = require('../lib/logger').getChild(__filename);
+
+var dockerPath;
 var eventEmitter = new events.EventEmitter();
 var found = false;
 
 which('docker', function(err, cmdpath) {
   if (err) {
-    console.log('err finding docker '+err);
+    log.fatal({
+      err: err
+    }, 'err finding docker');
     process.exit(1);
   }
   dockerPath = cmdpath;

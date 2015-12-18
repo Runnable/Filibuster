@@ -1,5 +1,10 @@
+/**
+ * @module tools/test
+ */
 var program = require('commander');
 var Primus = require('primus');
+
+var log = require('../lib/logger').getChild(__filename);
 
 program
   .version('0.0.1')
@@ -40,7 +45,9 @@ var start = function(cb) {
     onRep();
     terminal.on('data', function function_name (data) {
       if(~data.indexOf("/home/ubuntu/Filibuster")) {
-        console.log("pwd took", new Date() - start);
+        log.trace({
+          timing: new Date() - start
+        }, 'pwd took');
         doneCnt++;
         setTimeout(onRep, 10000);
       }
