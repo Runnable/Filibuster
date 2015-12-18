@@ -15,7 +15,7 @@ var found = false;
 
 which('docker', function(err, cmdpath) {
   if (err) {
-    log.trace({
+    log.fatal({
       err: err
     }, 'err finding docker');
     process.exit(1);

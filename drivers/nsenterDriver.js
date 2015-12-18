@@ -15,7 +15,7 @@ var nsenterPath;
 
 which('docker-enter', function(err, cmdpath) {
   if (err) {
-    log.trace({
+    log.fatal({
       err: err
     }, 'err with docker-enter');
     process.exit(1);
