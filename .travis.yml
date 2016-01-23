@@ -8,4 +8,11 @@ matrix:
 sudo: false
 env:
   global:
+  - CXX=g++-4.8
   - NODE_ENV=test
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - g++-4.8
