@@ -33,17 +33,12 @@
     "ip": "^1.1.0",
     "keypather": "^1.10.1",
     "primus": "3.2.1",
-    "pty.js": "0.2.6",
+    "pty.js": "^0.3.0",
     "substream": "0.2.0",
     "which": "1.0.5",
     "ws": "0.4.31"
   },
   "devDependencies": {
     "lab": "3.2.1"
-  },
-  "engineStrict": true,
-  "engine": {
-    "node": "0.10.28",
-    "npm": "2.1.18"
   }
 }
