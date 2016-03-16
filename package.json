@@ -5,7 +5,7 @@
   "main": "./lib/filibuster.js",
   "scripts": {
     "test": "NODE_ENV=test lab -v -c",
-    "start": "node index.js"
+    "start": "ulimit -c unlimited && node --abort-on-uncaught-exception index.js"
   },
   "repository": {
     "type": "git",
